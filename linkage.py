@@ -1,6 +1,7 @@
 import math
+import numpy as np
 
-import spikm_trig as s_trig
+from spikm_trig import Toolkit as STrig
 
 
 class CrankShaft:
@@ -10,10 +11,10 @@ class CrankShaft:
         initialize the crankshaft assembly between the motor and the corresponding connection on the platform
         :param node: dict{'x', 'y', 'z'}, location of the platform connection in the global x, y, z coordinate system
         :param shaft: dict{'x', 'y', 'z'}, location of the motor shaft in the global x, y, z coordinate system
-        :param crank_length:
-        :param crank_start_angle:
-        :param link_length:
-        :param crank_plane:
+        :param crank_length: float or int length of crankshaft
+        :param crank_start_angle: float or int, starting angle of crankshaft, 90 is horizontal
+        :param link_length: float or int length of linkage
+        :param crank_plane: angle that the plane of rotation of the motor shaft subtends to the global x axis
         """
         self.init = False
         try:
@@ -34,12 +35,37 @@ class CrankShaft:
         self._crank = self._Crank(length=crank_length, start_angle=crank_start_angle)
         self._link = self._Linkage(length=link_length)
 
-        if self._crank.init and self._link.init:
-            self.init = True
-            self._crank_plane = crank_plane
-            self._node = node
-            self._shaft = shaft
+        if not(self._crank.init and self._link.init):
+            print("Terminating linkage initialization due to setup error!")
+            return
+        self.init = True
+        self._crank_plane = crank_plane
+        self._node = node
+        self._shaft = shaft
+        self._connector = self._con_loc_global()
 
+    def _con_loc_global(self):
+        """
+        calculate the coordinate of the crank-linkage connection in global coordinates
+        :return: crank-linkage connection in global coordinates
+        """
+        _alpha = 0
+        _beta = 0
+        _gamma = self._crank_plane
+        # global coordinate of the motor shaft + the local crank vector rotated to the global coordinate system
+        return self._shaft + STrig.apply_rotation(_alpha, _beta, _gamma, self._crank.connector)
+
+    def _node_loc_local(self):
+        """
+        calculate the local coordinate of the linkage-platform connection for computational simplicity
+        :return: coordinates of the linkage-platform connection
+        """
+        _alpha = 0
+        _beta = 0
+        _gamma = -self._crank_plane
+        _vector = np.array(self._node['x'], self._node['y'], self._node['z']) - \
+            np.array(self._shaft['x'], self._shaft['y'], self._shaft['z'])
+        return STrig.apply_rotation(_alpha, _beta, _gamma, _vector)
 
     class _Crank:
         def __init__(self, length, start_angle):
@@ -62,16 +88,16 @@ class CrankShaft:
             self.init = True
             self.length = length
             self.angle = math.radians(start_angle)
-            self.connector = {'x': 0, 'y': 0}
+            self.connector = STrig.get_xy(length=self.length, theta=self.angle)
 
         def move(self, new_connector):
             """
             update the crank angle based on the movement of the linkage
-            :param new_connector: new position of the crank as dict {'x': _, 'y': _}
+            :param new_connector: new position of the crank as dict {'x': _, 'z': _}
             :return:
             """
             self.connector = new_connector
-            self.angle = s_trig.get_theta(x=self.connector['x'], y=self.connector['y'])
+            self.angle = STrig.get_theta(x=self.connector['x'], z=self.connector['z'])
 
     class _Linkage:
         def __init__(self, length):
