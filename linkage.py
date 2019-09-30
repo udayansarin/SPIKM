@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from numpy.polynomial import Polynomial as poly
 
 from spikm_trig import Toolkit as STrig
 
@@ -17,6 +18,7 @@ class CrankShaft:
         :param crank_plane: angle that the plane of rotation of the motor shaft subtends to the global x axis
         """
         self.init = False
+        self.incompatible = False
         try:
             for connection, coordinates in {'platform': node, 'motor': shaft}.items():
                 for coordinate, val in coordinates.items():
@@ -53,7 +55,10 @@ class CrankShaft:
         _beta = 0
         _gamma = self._crank_plane
         # global coordinate of the motor shaft + the local crank vector rotated to the global coordinate system
-        return self._shaft + STrig.apply_rotation(_alpha, _beta, _gamma, self._crank.connector)
+        _delta_coordinates = STrig.apply_rotation(_alpha, _beta, _gamma, self._crank.connector)
+        return {'x': self._shaft['x'] + _delta_coordinates[0],
+                'y': self._shaft['y'] + _delta_coordinates[1],
+                'z': self._shaft['z'] + _delta_coordinates[2]}
 
     def _node_loc_local(self):
         """
@@ -65,7 +70,43 @@ class CrankShaft:
         _gamma = -self._crank_plane
         _vector = np.array(self._node['x'], self._node['y'], self._node['z']) - \
             np.array(self._shaft['x'], self._shaft['y'], self._shaft['z'])
-        return STrig.apply_rotation(_alpha, _beta, _gamma, _vector)
+        _loc_vector = STrig.apply_rotation(_alpha, _beta, _gamma, _vector)
+        return {'x': _loc_vector[0], 'y': _loc_vector[1], 'z': _loc_vector[2]}
+
+    def move(self, x_new, y_new, z_new):
+        self._node['x'] = x_new
+        self._node['y'] = y_new
+        self._node['z'] = z_new
+        node_local = self._node_loc_local()  # local x, y and z for the platform
+        x = node_local['x']
+        y = node_local['y']
+        z = node_local['z']
+        k_sq = self._crank.length**2 - self._link.length**2 + x**2 + y**2 + z**2
+        a = 1 + (x/z)**2  # x^2 term
+        b = -(k_sq*x)/(z**2)  # x term
+        c = (k_sq/(2*z))**2 - self._crank.length**2  # constant term
+        c_local_x = poly([c, b, a]).roots()[0]  # ax^2 + bx + c = 0
+        if np.iscomplex(c_local_x):
+            print("You cannot complete this move!")
+            self.incompatible = True
+        c_local_z = k_sq/(2*z) - (c_local_x*x/z)
+        self._crank.move({'x': c_local_x, 'z': c_local_z})
+        self._connector = self._con_loc_global()
+
+    def get_linkage(self):
+        """
+        develop plot for the linkage in global 3d space in the form of lists of x, y and z coordinates of each point
+        :return: bool - whether the plot is real/complex, x coordinate list, y list, z list
+        """
+        x = []
+        y = []
+        z = []
+        if not self.incompatible:
+            x = [self._shaft['x'], self._connector['x'], self._node['x']]
+            y = [self._shaft['y'], self._connector['y'], self._node['y']]
+            z = [self._shaft['z'], self._connector['z'], self._node['z']]
+
+        return (not self.incompatible), x, y, z
 
     class _Crank:
         def __init__(self, length, start_angle):
