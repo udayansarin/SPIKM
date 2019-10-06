@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from numpy.polynomial import Polynomial as poly
+from numpy.polynomial import Polynomial as Poly
 
 from spikm_trig import Toolkit as STrig
 
@@ -85,7 +85,7 @@ class CrankShaft:
         a = 1 + (x/z)**2  # x^2 term
         b = -(k_sq*x)/(z**2)  # x term
         c = (k_sq/(2*z))**2 - self._crank.length**2  # constant term
-        c_local_x = poly([c, b, a]).roots()[0]  # ax^2 + bx + c = 0
+        c_local_x = Poly([c, b, a]).roots()[0]  # ax^2 + bx + c = 0
         if np.iscomplex(c_local_x):
             print("You cannot complete this move!")
             self.incompatible = True

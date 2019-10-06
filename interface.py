@@ -1,13 +1,9 @@
 import os
+import time
 from tkinter import *
 from tkinter import ttk
-
-import matplotlib
-import matplotlib.patches as patches
-
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-matplotlib.use('TkAgg')
+from ui.setup_window import Design, Display
+from ui.simulation_window import Controller, Simulation
 
 
 class _Logger:
@@ -30,7 +26,7 @@ class _Interface:
         self._child = _child
         self._title = 'SPIKM - Inverse Kinematics'
         self._icon_f = os.path.join(os.getcwd(), 'arm.gif')
-        self._size = "700x700"
+        self._size = "905x600"
         self._notebook = None
 
     def _init_notebook(self):
@@ -55,6 +51,9 @@ class _Interface:
         self._init_notebook()
         self._init_tab(tab='setup')
         self._init_tab(tab='simulation')
+
+    def shutdown(self):
+        self._delete_tabs()
 
     class _Notebook:
         def __init__(self, parent):
@@ -87,11 +86,21 @@ class _Interface:
             def __init__(self, name, parent):
                 self._parent = parent
                 self._name = name
+                self._design_child = None
+                self._output_child = None
+                self._controller_child = None
+                self._simulation_child = None
                 self._frames = {}
                 self.me = ttk.Frame(self._parent)
 
             def add_tab(self):
                 self._parent.add(self.me, text=self._name.upper())
+                if self._name == 'setup':
+                    self._design_child = Design(frame=self.me)
+                    self._output_child = Display(frame=self.me)
+                elif self._name == 'simulation':
+                    self._controller_child = Controller(frame=self.me)
+                    self._simulation_child = Simulation(frame=self.me)
 
             def kill(self):
                 self.me.destroy()
@@ -104,6 +113,7 @@ class RunInterface:
         self._root_control = _Interface(self._root)
         self._root_control.initialize_window()
         self._root_control.run_setup()
+        #self._root_control.shutdown()
         self._root.mainloop()
 
 
