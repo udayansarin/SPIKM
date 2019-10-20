@@ -2,7 +2,7 @@ import math
 import numpy as np
 from numpy.polynomial import Polynomial as Poly
 
-from spikm_trig import Toolkit as STrig
+from dynamics.spikm_trig import Toolkit as STrig
 
 
 class CrankShaft:

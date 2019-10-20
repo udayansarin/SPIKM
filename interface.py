@@ -86,7 +86,6 @@ class _Interface:
                 self._parent = parent
                 self._name = name
                 self._design_child = None
-                self._output_child = None
                 self._controller_child = None
                 self._simulation_child = None
                 self._frames = {}
@@ -96,7 +95,6 @@ class _Interface:
                 self._parent.add(self.me, text=self._name.upper())
                 if self._name == 'setup':
                     self._design_child = Design(frame=self.me)
-                    self._output_child = Display(frame=self.me)
                 elif self._name == 'simulation':
                     self._controller_child = Controller(frame=self.me)
                     self._simulation_child = Simulation(frame=self.me)

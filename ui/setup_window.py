@@ -1,5 +1,8 @@
+import math
 import sys
 from tkinter import *
+
+from dynamics.spikm_trig import Toolkit
 from ui.plotting_tools import GUIPlotter
 
 
@@ -30,6 +33,8 @@ class Design:
         self._simulate_strt = None
         self._design_update = None
         self._design_ok = None
+        self._design = {}
+        self._output = Display(frame=self._parent)
         self._show_widgets()
 
     def _show_widgets(self):
@@ -51,7 +56,7 @@ class Design:
         self._simulate_strt.grid(row=2, column=6)
 
     def _update_design(self):
-        design = {
+        self._design = {
             'ptfrm_sze': self._inp_ptfrm_sze.value,
             'ptfrm_len': self._inp_ptfrm_len.value,
             'lnkge_ang': self._inp_lnkge_ang.value,
@@ -60,7 +65,44 @@ class Design:
             'crank_len': self._inp_crank_len.value,
             'assly_ang': self._inp_assly_ang.value
         }
-        self._design_ok = not(-1 in [val for _, val in design.items()])
+        self._design_ok = not(-1 in [val for _, val in self._design.items()])
+        if self._design_ok:
+            cs_x, cs_y = self.crankshaft
+            self._output.plot_crank(x=cs_x, y=cs_y)
+            pt_x, pt_y = self.platform
+            self._output.plot_ptfrm(x=pt_x, y=pt_y)
+
+    @property
+    def crankshaft(self):
+        design = self.design
+        x = [0,
+             design['crank_len']*math.cos(math.radians(design['crank_ang'])),
+             design['crank_len']*math.cos(math.radians(design['crank_ang'])) +
+             design['lnkge_len']*math.sin(math.radians(design['lnkge_ang']))]
+        y = [0,
+             design['crank_len']*math.sin(math.radians(design['crank_ang'])),
+             design['crank_len']*math.sin(math.radians(design['crank_ang'])) +
+             design['lnkge_len']*math.cos(math.radians(design['lnkge_ang']))]
+        return x, y
+
+    @property
+    def platform(self):
+        design = self.design
+        p1 = [-0.5*design['ptfrm_len'], design['ptfrm_sze'], 0]
+        p2 = [0.5*design['ptfrm_len'], design['ptfrm_sze'], 0]
+        points = [p1, p2, list(Toolkit.apply_rotation(0, 0, -120, p1)), list(Toolkit.apply_rotation(0, 0, -120, p2)),
+                  list(Toolkit.apply_rotation(0, 0, 120, p1)), list(Toolkit.apply_rotation(0, 0, 120, p2)), p1]
+        x = [p[0] for p in points]
+        y = [p[1] for p in points]
+        return x, y
+
+    @property
+    def validated(self):
+        return self._design_ok
+
+    @property
+    def design(self):
+        return self._design
 
     def _start_sim(self):
         return
@@ -114,17 +156,34 @@ class Display:
         self._crank_window.grid(row=0, column=0)
         self._platform_window = Frame(self._me)
         self._platform_window.grid(row=0, column=1)
-        x = [1, 2, 3, 4]
-        y = [1, 2, 4, 8]
-        cvs1 = GUIPlotter.make_plot(x, y, self._crank_window, 'test', 'test', 'test', 4, 4)
-        cvs2 = GUIPlotter.make_plot(y, x, self._platform_window, 'test', 'test', 'test', 4, 4)
+        self.plot_crank()
+        self.plot_ptfrm()
 
-        cvs1.get_tk_widget().grid(row=0, column=0)
-        cvs1.draw()
+    def plot_crank(self, x=None, y=None):
+        if not(x or y):
+            x = []
+            y = []
+            _lim = None
+        else:
+            _lim = max(max(x), max(y))
+        cvs = GUIPlotter.make_plot(x, y, self._crank_window, plot_title='Crank Shaft', x_axis='X →', y_axis='Z →',
+                                   x_size=4, y_size=4, _lim=_lim)
+        cvs.get_tk_widget().grid(row=0, column=0)
+        cvs.draw()
+
+    def plot_ptfrm(self, x=None, y=None):
+        if not(x or y):
+            x = []
+            y = []
+            _lim = None
+        else:
+            _lim = max(max(x), max(y))
+        cvs = GUIPlotter.make_plot(x, y, self._platform_window, plot_title='Platform', x_axis='X →', y_axis='Y →',
+                                   x_size=4, y_size=4, _lim=_lim)
         Display._spacer(self._crank_window, row=0, col=1)
 
-        cvs2.get_tk_widget().grid(row=0, column=1)
-        cvs2.draw()
+        cvs.get_tk_widget().grid(row=0, column=1)
+        cvs.draw()
 
     @staticmethod
     def _spacer(parent, row, col):
