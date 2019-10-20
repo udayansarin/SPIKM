@@ -1,5 +1,4 @@
 import os
-import time
 from tkinter import *
 from tkinter import ttk
 from ui.setup_window import Design, Display
