@@ -33,7 +33,7 @@ class GUIPlotter:
         a.set_ylabel(y_axis)
         if _lim:
             a.set_xlim([-1.1*_lim, 1.1*_lim])
-            a.set_ylim([-0.9*_lim, 1.1*_lim])
+            a.set_ylim([-1.1*_lim, 1.1*_lim])
         a.grid()
         a.plot(_x, _y, color='red')
 

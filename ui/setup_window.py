@@ -18,8 +18,12 @@ class _Orientation:
 
 
 class Design:
-    def __init__(self, frame):
+    def __init__(self, frame, driver, master):
         self._parent = frame
+        self._driver = driver
+        print(f'Program master in class {type(self).__name__}:')
+        print(master)
+        self._master = master
         self._me = LabelFrame(self._parent)
         self._me.grid(row=1, column=0)
         self._orientation = _Orientation()
@@ -34,7 +38,6 @@ class Design:
         self._design_update = None
         self._design_ok = None
         self._design = {}
-        self._output = Display(frame=self._parent)
         self._show_widgets()
 
     def _show_widgets(self):
@@ -54,6 +57,7 @@ class Design:
         self._simulate_strt = Button(self._me, text='Simulate', command=lambda: self._start_sim(), width=11,
                                      height=2, font=('Helvetica', '15'))
         self._simulate_strt.grid(row=2, column=6)
+        return
 
     def _update_design(self):
         self._design = {
@@ -68,13 +72,19 @@ class Design:
         self._design_ok = not(-1 in [val for _, val in self._design.items()])
         if self._design_ok:
             cs_x, cs_y = self.crankshaft
-            self._output.plot_crank(x=cs_x, y=cs_y)
+            self._driver.output_child.plot_crank(x=cs_x, y=cs_y)
             pt_x, pt_y = self.platform
-            self._output.plot_ptfrm(x=pt_x, y=pt_y)
+            self._driver.output_child.plot_ptfrm(x=pt_x, y=pt_y)
+            print('Saving design to Program Master at:')
+            print(self._master)
+            self._master.save_design(self._design)
+        else:
+            print('Error: Unable to save incomplete design!')
+        return
 
     @property
     def crankshaft(self):
-        design = self.design
+        design = self._design
         x = [0,
              design['crank_len']*math.cos(math.radians(design['crank_ang'])),
              design['crank_len']*math.cos(math.radians(design['crank_ang'])) +
@@ -87,7 +97,7 @@ class Design:
 
     @property
     def platform(self):
-        design = self.design
+        design = self._design
         p1 = [-0.5*design['ptfrm_len'], design['ptfrm_sze'], 0]
         p2 = [0.5*design['ptfrm_len'], design['ptfrm_sze'], 0]
         points = [p1, p2, list(Toolkit.apply_rotation(0, 0, -120, p1)), list(Toolkit.apply_rotation(0, 0, -120, p2)),
@@ -96,15 +106,13 @@ class Design:
         y = [p[1] for p in points]
         return x, y
 
-    @property
-    def validated(self):
-        return self._design_ok
-
-    @property
-    def design(self):
-        return self._design
-
     def _start_sim(self):
+        if self._design_ok:
+            print('confirming design validated at')
+            print(self._master)
+            self._master.validate()
+        else:
+            print("Error: Design not complete/saved!")
         return
 
     class _Input:
@@ -141,6 +149,7 @@ class Design:
             else:
                 self.submit.configure(background='red', relief=RAISED)
             self._value = val
+            return
 
         @property
         def value(self):
@@ -170,6 +179,7 @@ class Display:
                                    x_size=4, y_size=4, _lim=_lim)
         cvs.get_tk_widget().grid(row=0, column=0)
         cvs.draw()
+        return
 
     def plot_ptfrm(self, x=None, y=None):
         if not(x or y):
@@ -184,7 +194,9 @@ class Display:
 
         cvs.get_tk_widget().grid(row=0, column=1)
         cvs.draw()
+        return
 
     @staticmethod
     def _spacer(parent, row, col):
         Label(parent, text='\t').grid(row=row, column=col)
+        return
