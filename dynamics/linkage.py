@@ -29,7 +29,7 @@ class CrankShaft:
         try:
             assert(
                 ((type(crank_plane) is int) or (type(crank_plane) is float))
-                and 0 <= crank_plane < 360
+                and -90 <= crank_plane <= 90
             )
         except AssertionError:
             print(f"Error in initializing crank orientation: angle: {crank_length}")
@@ -113,7 +113,7 @@ class CrankShaft:
             """
             define a crank connected to a motor with the motor shaft at (0, 0, 0) in local coordinates
             :param length: length of the crank shaft
-            :param start_angle: starting angle of the crank shaft, between (0, 180) with 90 being horizontal
+            :param start_angle: starting angle of the crank shaft, between (-90, 90) with 0 being horizontal
             """
             self.init = False
             try:
@@ -121,7 +121,7 @@ class CrankShaft:
                     ((type(length) is int) or (type(length) is float))
                     and length > 0
                     and ((type(start_angle) is float) or type(start_angle) is int)
-                    and 0 <= start_angle <= 180
+                    and -90 <= start_angle <= 90
                 )
             except AssertionError:
                 print("Error in initializing crank!")
@@ -129,7 +129,7 @@ class CrankShaft:
             self.init = True
             self.length = length
             self.angle = math.radians(start_angle)
-            self.connector = STrig.get_xy(length=self.length, theta=self.angle)
+            self.connector = STrig.get_xz(length=self.length, theta=self.angle)
 
         def move(self, new_connector):
             """

@@ -8,7 +8,7 @@ class Toolkit:
         return math.atan(z/x)
 
     @staticmethod
-    def get_xy(length, theta):
+    def get_xz(length, theta):
         return {'x': length*math.cos(theta), 'z': length*math.sin(theta)}
 
     @staticmethod

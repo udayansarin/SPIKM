@@ -3,6 +3,7 @@ import sys
 from tkinter import *
 
 from dynamics.spikm_trig import Toolkit
+from dynamics.platform import Platform
 from ui.plotting_tools import GUIPlotter
 
 
@@ -71,8 +72,8 @@ class Design:
         }
         self._design_ok = not(-1 in [val for _, val in self._design.items()])
         if self._design_ok:
-            cs_x, cs_y = self.crankshaft
-            self._driver.output_child.plot_crank(x=cs_x, y=cs_y)
+            cs_x, cs_z = self.crankshaft
+            self._driver.output_child.plot_crank(x=cs_x, y=cs_z)
             pt_x, pt_y = self.platform
             self._driver.output_child.plot_ptfrm(x=pt_x, y=pt_y)
             print('Saving design to Program Master at:')
@@ -85,23 +86,15 @@ class Design:
     @property
     def crankshaft(self):
         design = self._design
-        x = [0,
-             design['crank_len']*math.cos(math.radians(design['crank_ang'])),
-             design['crank_len']*math.cos(math.radians(design['crank_ang'])) +
-             design['lnkge_len']*math.sin(math.radians(design['lnkge_ang']))]
-        y = [0,
-             design['crank_len']*math.sin(math.radians(design['crank_ang'])),
-             design['crank_len']*math.sin(math.radians(design['crank_ang'])) +
-             design['lnkge_len']*math.cos(math.radians(design['lnkge_ang']))]
-        return x, y
+        crank_con = Toolkit.get_xz(length=design['crank_len'], theta=math.radians(design['crank_ang']))
+        con_node = Toolkit.get_xz(length=design['lnkge_len'], theta=math.radians(90-design['lnkge_ang']))
+        x = [0, crank_con['x'], crank_con['x'] + con_node['x']]
+        z = [0, crank_con['z'], crank_con['z'] + con_node['z']]
+        return x, z
 
     @property
     def platform(self):
-        design = self._design
-        p1 = [-0.5*design['ptfrm_len'], design['ptfrm_sze'], 0]
-        p2 = [0.5*design['ptfrm_len'], design['ptfrm_sze'], 0]
-        points = [p1, p2, list(Toolkit.apply_rotation(0, 0, -120, p1)), list(Toolkit.apply_rotation(0, 0, -120, p2)),
-                  list(Toolkit.apply_rotation(0, 0, 120, p1)), list(Toolkit.apply_rotation(0, 0, 120, p2)), p1]
+        points = Platform.generate(design=self._design)
         x = [p[0] for p in points]
         y = [p[1] for p in points]
         return x, y
