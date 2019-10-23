@@ -76,14 +76,27 @@ class Controller:
 class Simulation:
     def __init__(self, frame):
         self._parent = frame
-        self._me = LabelFrame(self._parent)
-        self._me.grid(row=0, column=0)
-        x = [1, 2, 3, 4]
-        y = [1, 2, 4, 8]
-        cvs1 = GUIPlotter.make_plot(x, y, self._me, 'test', 'test', 'test', 6, 4.5)
+        self._sim = LabelFrame(self._parent)
+        self._sim.grid(row=0, column=0)
+        self._motor = LabelFrame(self._parent)
+        self._motor.grid(row=0, column=1)
+        self._init_empty_plots()
 
-        cvs1.get_tk_widget().grid(row=0, column=0)
-        cvs1.draw()
+    def _init_empty_plots(self):
+        x = []
+        y = []
+        z = []
+        sim = GUIPlotter.plot_3d(x, y, z, self._sim, plot_title='Stewart Platform Simulation')
+        sim.get_tk_widget().grid(row=0, column=0)
+        sim.draw()
+
+        motors = GUIPlotter.plot_motors(_window=self._motor)
+        motors.get_tk_widget().grid(row=0, column=0)
+        motors.draw()
+        return
+
+    def start_simulation(self):
+        pass
 
     @staticmethod
     def _spacer(parent, row, col):

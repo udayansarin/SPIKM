@@ -10,13 +10,15 @@ class _Platform:
         self.a = 0
         self.b = 0
         self.g = 0
-        self.ptfrm_sze = 0
-        self.ptfrm_len = 0
-        self.assly_ang = 0
-        self.crank_len = 0
-        self.crank_ang = 0
-        self.lnkge_ang = 0
-        self.lnkge_len = 0
+        self._design = None
+        self.nodes = {
+            '1': None,
+            '2': None,
+            '3': None,
+            '4': None,
+            '5': None,
+            '6': None
+        }
 
     def set_coordinates(self, orientation):
         self.x = orientation['x']
@@ -28,13 +30,7 @@ class _Platform:
         return
 
     def set_dimensions(self, design):
-        self.ptfrm_sze = design['ptfrm_sze']
-        self.ptfrm_len = design['ptfrm_len']
-        self.assly_ang = design['assly_ang']
-        self.crank_len = design['crank_len']
-        self.crank_ang = design['crank_ang']
-        self.lnkge_ang = design['ptfrm_len']
-        self.lnkge_len = design['lnkge_len']
+        self._design = design
         return
 
     @staticmethod
@@ -45,8 +41,14 @@ class _Platform:
                   list(Toolkit.apply_rotation(0, 0, 120, p1)), list(Toolkit.apply_rotation(0, 0, 120, p2)), p1]
         return points
 
+    def define_nodes(self):
+        coordinates = _Platform.generate_nodes(self._design)
+        x = [p[0] for p in coordinates]
+        y = [p[1] for p in coordinates]
+        z = [p[2] for p in coordinates]
+
     class _Node:
-        def __init__(self, init_coordinates, other_args):
+        def __init__(self, init_coordinates, crank_len, crank_ang, lnkge_len, lnkge_ang, assly_ang):
             self.x = init_coordinates['x']
             self.y = init_coordinates['y']
             self.z = init_coordinates['z']

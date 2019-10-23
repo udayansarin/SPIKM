@@ -60,10 +60,10 @@ class _Controller:
 
     @property
     def validated(self):
-        #todo: self._window.simulation_child.init_simulation()
         return self._validated
 
     def validate(self):
+        #todo: self._window.simulation_child.start_simulation()
         self._validated = True
         return
 
