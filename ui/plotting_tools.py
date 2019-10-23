@@ -41,13 +41,14 @@ class GUIPlotter:
         return canvas
 
     @staticmethod
-    def plot_3d(_x, _y, _z, _window, x_axis=None, y_axis=None, z_axis=None, plot_title=None):
+    def plot_3d(_x, _y, _z, _window, _lim=1, linkages=None, x_axis=None, y_axis=None, z_axis=None, plot_title=None):
         fig = Figure()
+        _lim *= 1.5
         simulation = Axes3D(fig)
         simulation.text2D(0.05, 0.95, "Stewart Platform Simulation", transform=simulation.transAxes)
-        simulation.set_zlim(-30, 30)
-        simulation.set_xlim(-30, 30)
-        simulation.set_ylim(-30, 30)
+        simulation.set_zlim(-_lim, _lim)
+        simulation.set_xlim(-_lim, _lim)
+        simulation.set_ylim(-_lim, _lim)
         simulation.plot(_x, _y, _z)
         canvas = FigureCanvasTkAgg(fig, master=_window)
         simulation.figure.canvas = canvas

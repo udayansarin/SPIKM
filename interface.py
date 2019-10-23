@@ -63,7 +63,7 @@ class _Controller:
         return self._validated
 
     def validate(self):
-        #todo: self._window.simulation_child.start_simulation()
+        self._window.simulation_child.start_simulation(self._window.design_child.design)
         self._validated = True
         return
 
@@ -78,7 +78,7 @@ class _Controller:
     def set_coordinates(self, coordinates):
         self._coordinates = coordinates
         print(self._coordinates)
-        #todo: self._window.simulation_child.update_simulation()
+        self._window.simulation_child.update_simulation(self._coordinates)
 
     @property
     def coordinates(self):

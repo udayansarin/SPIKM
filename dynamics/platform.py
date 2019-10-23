@@ -1,3 +1,4 @@
+import numpy as np
 from dynamics.linkage import CrankShaft as Cs
 from dynamics.spikm_trig import Toolkit
 
@@ -19,8 +20,10 @@ class _Platform:
             '5': None,
             '6': None
         }
+        self._shape = None
+        self._current_platform = None
 
-    def set_coordinates(self, orientation):
+    def _set_orientation(self, orientation):
         self.x = orientation['x']
         self.y = orientation['y']
         self.z = orientation['z']
@@ -31,21 +34,32 @@ class _Platform:
 
     def set_dimensions(self, design):
         self._design = design
+        self._shape = _Platform.generate_shape(self._design)
         return
 
+    def update_platform(self, move):
+        self._set_orientation(orientation=move)
+        _angular_pos = [Toolkit.apply_rotation(alpha=self.a, beta=self.b, gamma=self.g, vector=point)
+                        for point in self._shape]
+        self._current_platform = [list(np.array(v) + np.array([self.x, self.y, self.z])) for v in _angular_pos]
+
+    def get_platform(self, starting=False):
+        return _Platform.get_nodes(self._shape) if starting else _Platform.get_nodes(self._current_platform)
+
     @staticmethod
-    def generate_nodes(design):
+    def get_nodes(coordinates):
+        x = [p[0] for p in coordinates]
+        y = [p[1] for p in coordinates]
+        z = [p[2] for p in coordinates]
+        return x, y, z
+
+    @staticmethod
+    def generate_shape(design):
         p1 = [-0.5*design['ptfrm_len'], design['ptfrm_sze'], 0]
         p2 = [0.5*design['ptfrm_len'], design['ptfrm_sze'], 0]
         points = [p1, p2, list(Toolkit.apply_rotation(0, 0, -120, p1)), list(Toolkit.apply_rotation(0, 0, -120, p2)),
                   list(Toolkit.apply_rotation(0, 0, 120, p1)), list(Toolkit.apply_rotation(0, 0, 120, p2)), p1]
         return points
-
-    def define_nodes(self):
-        coordinates = _Platform.generate_nodes(self._design)
-        x = [p[0] for p in coordinates]
-        y = [p[1] for p in coordinates]
-        z = [p[2] for p in coordinates]
 
     class _Node:
         def __init__(self, init_coordinates, crank_len, crank_ang, lnkge_len, lnkge_ang, assly_ang):
@@ -64,7 +78,11 @@ class Platform:
         self.ptfrm = _Platform()
         self.ptfrm.set_dimensions(design=design)
 
+    @property
+    def run(self):
+        return self.ptfrm
+
     @staticmethod
     def generate(design):
-        return _Platform.generate_nodes(design)
+        return _Platform.generate_shape(design)
 

@@ -84,6 +84,10 @@ class Design:
         return
 
     @property
+    def design(self):
+        return self._design
+
+    @property
     def crankshaft(self):
         design = self._design
         crank_con = Toolkit.get_xz(length=design['crank_len'], theta=math.radians(design['crank_ang']))
