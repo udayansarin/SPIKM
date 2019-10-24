@@ -3,7 +3,6 @@ import numpy as np
 from dynamics.linkage import CrankShaft as Cs
 from dynamics.spikm_trig import Toolkit
 
-import matplotlib.pyplot as plt
 
 class _Platform:
     def __init__(self):
@@ -47,29 +46,32 @@ class _Platform:
 
     def get_platform(self, starting=False):
         _platform = _Platform.get_nodes(self._shape) if starting else _Platform.get_nodes(self._current_platform)
-        _linkages, _motors = self._init_nodes(_platform) if starting else self._update_nodes()
-        print(_linkages)
-        print(_motors)
-        return _platform, _linkages, _motors
+        _linkages, _motors, _feasible = self._init_nodes(_platform) if starting else self._update_nodes()
+        return _platform, _linkages, _motors, _feasible
 
     def _motor_distance_vector(self):
         c_shaft = Toolkit.get_xz(length=self._design['crank_len'],
                                  theta=math.radians(self._design['crank_ang']))
-        _x_abs = np.sqrt(self._design['lnkge_len']**2 -
-                         self._design['assly_ofs']**2 -
-                         (self._design['plane_ofs'] - 2*c_shaft['z'])**2) + c_shaft['x']
+        _x_abs = (self._design['lnkge_len']**2 -
+                  self._design['assly_ofs']**2 -
+                  (self._design['plane_ofs'] - 2*c_shaft['z'])**2)**0.5 + c_shaft['x']
+        if np.iscomplex(_x_abs):
+            _x_abs = None
         _y_abs = self._design['assly_ofs']
         _z_abs = self._design['plane_ofs']
         return _x_abs, _y_abs, _z_abs
 
     def _init_nodes(self, platform):
         motor_offsets = self._motor_distance_vector()
+        if motor_offsets[0] is None:
+            return None, None, [False]*6
         _linkages = {
             'x': [],
             'y': [],
             'z': []
         }
         _motor = []
+        _feasible = []
         for node, val in self.nodes.items():
             node_num = int(node)
             _even = node_num % 2 == 0
@@ -84,8 +86,6 @@ class _Platform:
             g_motor = Toolkit.apply_rotation(alpha=0, beta=0, gamma=_angle, vector=l_motor)
             val['motor'] = {'x': g_motor[0], 'y': g_motor[1], 'z': g_motor[2]}
             _node = {'x': g_node[0], 'y': g_node[1], 'z': g_node[2]}
-            # plt.scatter([g_motor[0]], [g_motor[1]], marker='o')
-            # plt.scatter([g_node[0]], [g_node[1]], marker='x')
             val['node'] = self._Node(node=_node,
                                      shaft=val['motor'],
                                      crank_length=self._design['crank_len'],
@@ -94,15 +94,14 @@ class _Platform:
                                      crank_plane=_angle
                                      )
             _link = val['node'].get_linkage()
-            print(_link)
-            # plt.show()
             if not _link['feasible']:
-                print('invalid move')
+                _feasible.append(False)
             else:
+                _feasible.append(True)
                 for key, v in _linkages.items():
                     v.append(_link[key])
                 _motor.append(_link['angle'])
-        return _linkages, _motor
+        return _linkages, _motor, _feasible
 
     def _update_nodes(self):
         _linkages = {
@@ -111,17 +110,20 @@ class _Platform:
             'z': []
         }
         _motor = []
+        _feasible = []
         for node_num, curr_pos in enumerate(self._current_platform[:-1]):
             _node = self.nodes[str(node_num+1)]
             _node['node'].update_position(posn=curr_pos)
             _link = _node['node'].get_linkage()
+
             if not _link['feasible']:
-                print('invalid move')
+                _feasible.append(False)
             else:
+                _feasible.append(True)
                 for key, v in _linkages.items():
                     v.append(_link[key])
                 _motor.append(_link['angle'])
-        return _linkages, _motor
+        return _linkages, _motor, _feasible
 
     @staticmethod
     def get_nodes(coordinates):

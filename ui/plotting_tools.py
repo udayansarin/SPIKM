@@ -58,17 +58,17 @@ class GUIPlotter:
         return canvas
 
     @staticmethod
-    def plot_motors(_window, motor_angles=[0.0]*6, _incompatible=[True]*6):
+    def plot_motors(_window, motor_angles=[0.000]*6, _incompatible=[True]*6):
         fig = Figure(figsize=(2, 5))
         base = 610
         for i, angle in enumerate(motor_angles):
             motor_num = i + 1
             subplot_num = base + motor_num
-            marker = f"${angle}$"
+            marker = f"${round(angle, 3)}$"
             color = 'green' if _incompatible[i] else 'red'
             m = fig.add_subplot(subplot_num)
             m.title.set_text(f'Motor{motor_num}')
-            m.scatter([angle], [0], marker=marker, s=300, c=color)
+            m.scatter([angle], [0], marker=marker, s=400, c=color)
             m.set_xlim([-90, 90])
             m.set_ylim([-1, 1])
             m.set_yticks([])

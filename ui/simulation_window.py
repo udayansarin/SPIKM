@@ -100,7 +100,7 @@ class Simulation:
         motors.draw()
         return
 
-    def _update_plot(self, platform, linkages, motors):  #todo: remove the None's after development
+    def _update_plot(self, platform, linkages, motors, motor_warnings):
         if not self.plot_limit:
             self.plot_limit = max(max(platform[0]), max(platform[1]))
 
@@ -109,20 +109,26 @@ class Simulation:
                                  _lim=self.plot_limit)
         sim.get_tk_widget().grid(row=0, column=0)
 
-        motors = GUIPlotter.plot_motors(_window=self._motor, motor_angles=motors)
+        motors = GUIPlotter.plot_motors(_window=self._motor, motor_angles=motors, _incompatible=motor_warnings)
         motors.get_tk_widget().grid(row=0, column=0)
         motors.draw()
         sim.draw()
 
     def start_simulation(self, design):
         self.ptfrm = Platform(design=design)
-        platform, linkages, motors = self.ptfrm.run.get_platform(starting=True)
-        self._update_plot(platform=platform, linkages=linkages, motors=motors)
+        platform, linkages, motors, feasible = self.ptfrm.run.get_platform(starting=True)
+        if False in feasible:
+            print("Design is Erroneous!")
+            return
+        self._update_plot(platform=platform, linkages=linkages, motors=motors, motor_warnings=feasible)
+        return
 
     def update_simulation(self, coordinates):
         self.ptfrm.run.update_platform(coordinates)
-        platform, linkages, motors = self.ptfrm.run.get_platform(starting=False)
-        self._update_plot(platform=platform, linkages=linkages, motors=motors)
+        platform, linkages, motors, feasible = self.ptfrm.run.get_platform(starting=False)
+        if False in feasible:
+            print("Design is Erroneous!")
+        self._update_plot(platform=platform, linkages=linkages, motors=motors, motor_warnings=feasible)
 
     @staticmethod
     def _spacer(parent, row, col):

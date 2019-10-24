@@ -146,7 +146,6 @@ class RunInterface:
         self._root_control = _Controller(self._root)
         self._root_control.initialize_window()
         self._root_control.run_setup()
-        #self._root_control.shutdown()
         self._root.mainloop()
 
 
