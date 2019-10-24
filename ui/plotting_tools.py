@@ -41,7 +41,7 @@ class GUIPlotter:
         return canvas
 
     @staticmethod
-    def plot_3d(_x, _y, _z, _window, _lim=1, linkages=None, x_axis=None, y_axis=None, z_axis=None, plot_title=None):
+    def plot_3d(_x, _y, _z, _window, linkage_x, linkage_y, linkage_z, _lim=1):
         fig = Figure()
         _lim *= 1.5
         simulation = Axes3D(fig)
@@ -50,6 +50,8 @@ class GUIPlotter:
         simulation.set_xlim(-_lim, _lim)
         simulation.set_ylim(-_lim, _lim)
         simulation.plot(_x, _y, _z)
+        for i, _ in enumerate(linkage_x):
+            simulation.plot(linkage_x[i], linkage_y[i], linkage_z[i])
         canvas = FigureCanvasTkAgg(fig, master=_window)
         simulation.figure.canvas = canvas
         simulation.mouse_init()

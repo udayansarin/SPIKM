@@ -91,7 +91,7 @@ class Simulation:
         x = []
         y = []
         z = []
-        sim = GUIPlotter.plot_3d(x, y, z, self._sim, plot_title='Stewart Platform Simulation')
+        sim = GUIPlotter.plot_3d(x, y, z, self._sim, x, y, z)
         sim.get_tk_widget().grid(row=0, column=0)
         sim.draw()
 
@@ -100,21 +100,29 @@ class Simulation:
         motors.draw()
         return
 
-    def _update_plot(self, platform, motors=None, linkages=None):  #todo: remove the None's after development
+    def _update_plot(self, platform, linkages, motors):  #todo: remove the None's after development
         if not self.plot_limit:
             self.plot_limit = max(max(platform[0]), max(platform[1]))
-        sim = GUIPlotter.plot_3d(platform[0], platform[1], platform[2], self._sim, _lim=self.plot_limit,
-                                 plot_title='Stewart Platform Simulation')
+
+        sim = GUIPlotter.plot_3d(_x=platform[0], _y=platform[1], _z=platform[2], _window=self._sim,
+                                 linkage_x=linkages['x'], linkage_y=linkages['y'], linkage_z=linkages['z'],
+                                 _lim=self.plot_limit)
         sim.get_tk_widget().grid(row=0, column=0)
+
+        motors = GUIPlotter.plot_motors(_window=self._motor, motor_angles=motors)
+        motors.get_tk_widget().grid(row=0, column=0)
+        motors.draw()
         sim.draw()
 
     def start_simulation(self, design):
         self.ptfrm = Platform(design=design)
-        self._update_plot(platform=self.ptfrm.run.get_platform(starting=True))
+        platform, linkages, motors = self.ptfrm.run.get_platform(starting=True)
+        self._update_plot(platform=platform, linkages=linkages, motors=motors)
 
     def update_simulation(self, coordinates):
         self.ptfrm.run.update_platform(coordinates)
-        self._update_plot(platform=self.ptfrm.run.get_platform(starting=False))
+        platform, linkages, motors = self.ptfrm.run.get_platform(starting=False)
+        self._update_plot(platform=platform, linkages=linkages, motors=motors)
 
     @staticmethod
     def _spacer(parent, row, col):

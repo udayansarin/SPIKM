@@ -22,17 +22,17 @@ class CrankShaft:
         try:
             for connection, coordinates in {'platform': node, 'motor': shaft}.items():
                 for coordinate, val in coordinates.items():
-                    assert ((type(val) is int) or (type(val) is float))
+                    assert ((type(val) is int) or (type(val) is float) or isinstance(val, np.float))
         except AssertionError:
-            print(f"Error in coordinate for {connection}[{coordinate}]\nvalue:{val}")
+            print(f"Error in coordinate for {connection}[{coordinate}]\nvalue:{val}, {type(val)}")
             return
         try:
             assert(
-                ((type(crank_plane) is int) or (type(crank_plane) is float))
-                and -90 <= crank_plane <= 90
+                ((type(crank_plane) is int) or (type(crank_plane) is float) or isinstance(val, np.float))
+                and -360 <= crank_plane <= 360
             )
         except AssertionError:
-            print(f"Error in initializing crank orientation: angle: {crank_length}")
+            print(f"Error in initializing crank orientation: angle: {crank_plane}")
             return
         self._crank = self._Crank(length=crank_length, start_angle=crank_start_angle)
         self._link = self._Linkage(length=link_length)
@@ -68,8 +68,8 @@ class CrankShaft:
         _alpha = 0
         _beta = 0
         _gamma = -self._crank_plane
-        _vector = np.array(self._node['x'], self._node['y'], self._node['z']) - \
-            np.array(self._shaft['x'], self._shaft['y'], self._shaft['z'])
+        _vector = np.array([self._node['x'], self._node['y'], self._node['z']]) - \
+            np.array([self._shaft['x'], self._shaft['y'], self._shaft['z']])
         _loc_vector = STrig.apply_rotation(_alpha, _beta, _gamma, _vector)
         return {'x': _loc_vector[0], 'y': _loc_vector[1], 'z': _loc_vector[2]}
 
@@ -85,7 +85,7 @@ class CrankShaft:
         a = 1 + (x/z)**2  # x^2 term
         b = -(k_sq*x)/(z**2)  # x term
         c = (k_sq/(2*z))**2 - self._crank.length**2  # constant term
-        c_local_x = Poly([c, b, a]).roots()[0]  # ax^2 + bx + c = 0
+        c_local_x = Poly([c, b, a]).roots()[1]  # ax^2 + bx + c = 0
         if np.iscomplex(c_local_x):
             print("You cannot complete this move!")
             self.incompatible = True
@@ -106,7 +106,13 @@ class CrankShaft:
             y = [self._shaft['y'], self._connector['y'], self._node['y']]
             z = [self._shaft['z'], self._connector['z'], self._node['z']]
 
-        return (not self.incompatible), x, y, z
+        return {
+            'feasible': (not self.incompatible),
+            'x': x,
+            'y': y,
+            'z': z,
+            'angle': self._crank.angle
+        }
 
     class _Crank:
         def __init__(self, length, start_angle):
@@ -129,7 +135,8 @@ class CrankShaft:
             self.init = True
             self.length = length
             self.angle = math.radians(start_angle)
-            self.connector = STrig.get_xz(length=self.length, theta=self.angle)
+            _connector = STrig.get_xz(length=self.length, theta=self.angle)
+            self.connector = [_connector['x'], 0, _connector['z']]
 
         def move(self, new_connector):
             """
@@ -137,8 +144,12 @@ class CrankShaft:
             :param new_connector: new position of the crank as dict {'x': _, 'z': _}
             :return:
             """
-            self.connector = new_connector
-            self.angle = STrig.get_theta(x=self.connector['x'], z=self.connector['z'])
+            self.connector = [new_connector['x'], 0, new_connector['z']]
+            self.angle = STrig.get_theta(x=new_connector['x'], z=new_connector['z'])
+
+        @property
+        def position(self):
+            return self.angle
 
     class _Linkage:
         def __init__(self, length):

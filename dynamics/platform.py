@@ -47,9 +47,10 @@ class _Platform:
 
     def get_platform(self, starting=False):
         _platform = _Platform.get_nodes(self._shape) if starting else _Platform.get_nodes(self._current_platform)
-        if starting:
-            self._get_motors(_platform)
-        return _platform
+        _linkages, _motors = self._init_nodes(_platform) if starting else self._update_nodes()
+        print(_linkages)
+        print(_motors)
+        return _platform, _linkages, _motors
 
     def _motor_distance_vector(self):
         c_shaft = Toolkit.get_xz(length=self._design['crank_len'],
@@ -61,9 +62,14 @@ class _Platform:
         _z_abs = self._design['plane_ofs']
         return _x_abs, _y_abs, _z_abs
 
-    def _get_motors(self, platform):
+    def _init_nodes(self, platform):
         motor_offsets = self._motor_distance_vector()
-        print(motor_offsets)
+        _linkages = {
+            'x': [],
+            'y': [],
+            'z': []
+        }
+        _motor = []
         for node, val in self.nodes.items():
             node_num = int(node)
             _even = node_num % 2 == 0
@@ -80,13 +86,42 @@ class _Platform:
             _node = {'x': g_node[0], 'y': g_node[1], 'z': g_node[2]}
             # plt.scatter([g_motor[0]], [g_motor[1]], marker='o')
             # plt.scatter([g_node[0]], [g_node[1]], marker='x')
-            val['node'] = Cs(node=_node,
-                             shaft=val['motor'],
-                             crank_length=self._design['crank_len'],
-                             crank_start_angle=self._design['crank_ang'],
-                             link_length=self._design['lnkge_len'],
-                             crank_plane=self._design['assly_ang'])
-        # plt.show()
+            val['node'] = self._Node(node=_node,
+                                     shaft=val['motor'],
+                                     crank_length=self._design['crank_len'],
+                                     crank_start_angle=self._design['crank_ang'],
+                                     link_length=self._design['lnkge_len'],
+                                     crank_plane=_angle
+                                     )
+            _link = val['node'].get_linkage()
+            print(_link)
+            # plt.show()
+            if not _link['feasible']:
+                print('invalid move')
+            else:
+                for key, v in _linkages.items():
+                    v.append(_link[key])
+                _motor.append(_link['angle'])
+        return _linkages, _motor
+
+    def _update_nodes(self):
+        _linkages = {
+            'x': [],
+            'y': [],
+            'z': []
+        }
+        _motor = []
+        for node_num, curr_pos in enumerate(self._current_platform[:-1]):
+            _node = self.nodes[str(node_num+1)]
+            _node['node'].update_position(posn=curr_pos)
+            _link = _node['node'].get_linkage()
+            if not _link['feasible']:
+                print('invalid move')
+            else:
+                for key, v in _linkages.items():
+                    v.append(_link[key])
+                _motor.append(_link['angle'])
+        return _linkages, _motor
 
     @staticmethod
     def get_nodes(coordinates):
@@ -112,15 +147,20 @@ class _Platform:
         return x, z
 
     class _Node:
-        def __init__(self, init_coordinates, crank_len, crank_ang, lnkge_len, lnkge_ang, assly_ang):
-            self.x = init_coordinates['x']
-            self.y = init_coordinates['y']
-            self.z = init_coordinates['z']
-            #todo: self.obj = Cs(all_arguments)
-            #todo: I have functions to get the coordinates of the linkage if I provide the node's new coordinates
-            # todo: what I need to do is calculate the new coordinates of the node for the input move
-            # TODO: USE OTHER_ARGS ASSLY_ANG TO CALCULATE MOTOR POSITIONS, GENERATE_NODES ALREADY GIVES YOU NODES
-            # TODO: YOU SHOULD NOW HAVE ENOUGH INFORMATION TO INSTANTIATE LINKAGE.PY ASSLY_ANG = CRANK_PLANE
+        def __init__(self, node, shaft, crank_length, crank_start_angle, link_length, crank_plane):
+            self.me = Cs(node=node,
+                         shaft=shaft,
+                         crank_length=crank_length,
+                         crank_start_angle=crank_start_angle,
+                         link_length=link_length,
+                         crank_plane=crank_plane
+                         )
+
+        def update_position(self, posn):
+            self.me.move(x_new=posn[0], y_new=posn[1], z_new=posn[2])
+
+        def get_linkage(self):
+            return self.me.get_linkage()
 
 
 class Platform:
