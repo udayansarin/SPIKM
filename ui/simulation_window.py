@@ -116,7 +116,6 @@ class Simulation:
         self.ptfrm.run.update_platform(coordinates)
         self._update_plot(platform=self.ptfrm.run.get_platform(starting=False))
 
-
     @staticmethod
     def _spacer(parent, row, col):
         Label(parent, text='\t').grid(row=row, column=col)

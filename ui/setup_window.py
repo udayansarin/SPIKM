@@ -30,11 +30,12 @@ class Design:
         self._orientation = _Orientation()
         self._inp_ptfrm_sze = None
         self._inp_ptfrm_len = None
-        self._inp_lnkge_ang = None
         self._inp_crank_ang = None
+        self._inp_assly_ofs = None
         self._inp_assly_ang = None
         self._inp_crank_len = None
         self._inp_lnkge_len = None
+        self._inp_plane_dst = None
         self._simulate_strt = None
         self._design_update = None
         self._design_ok = None
@@ -45,13 +46,14 @@ class Design:
         self._inp_ptfrm_sze = self._Input(label_text='Platform Centre Length', parent=self._me, row=1, col=0)
         self._inp_ptfrm_len = self._Input(label_text='Platform Edge Length', parent=self._me, row=1, col=1)
         self._inp_lnkge_len = self._Input(label_text='Linkage Length', parent=self._me, row=1, col=2)
-        self._inp_lnkge_ang = self._Input(label_text='Initial Linkage Angle', parent=self._me, row=1, col=3,
+        self._inp_crank_len = self._Input(label_text='Crank Length', parent=self._me, row=1, col=3)
+        self._inp_crank_ang = self._Input(label_text='Initial Crank Angle', parent=self._me, row=1, col=4,
                                           limit_low=-90, limit_high=90)
-        self._inp_crank_len = self._Input(label_text='Crank Length', parent=self._me, row=1, col=4)
-        self._inp_crank_ang = self._Input(label_text='Initial Crank Angle', parent=self._me, row=1, col=5,
+        self._inp_assly_ofs = self._Input(label_text='Assembly Offset', parent=self._me, row=1, col=5,
                                           limit_low=-90, limit_high=90)
         self._inp_assly_ang = self._Input(label_text='Assembly Angle', parent=self._me, row=1, col=6,
                                           limit_low=-90, limit_high=90)
+        self._inp_plane_ofs = self._Input(label_text='Motor - Platform Offset', parent=self._me, row=2, col=0)
         self._design_update = Button(self._me, text='Update', command=lambda: self._update_design(), width=11,
                                      height=2, font=('Helvetica', '15'))
         self._design_update.grid(row=2, column=5)
@@ -64,11 +66,13 @@ class Design:
         self._design = {
             'ptfrm_sze': self._inp_ptfrm_sze.value,
             'ptfrm_len': self._inp_ptfrm_len.value,
-            'lnkge_ang': self._inp_lnkge_ang.value,
+            'lnkge_ang': 5,
             'lnkge_len': self._inp_lnkge_len.value,
             'crank_ang': self._inp_crank_ang.value,
             'crank_len': self._inp_crank_len.value,
-            'assly_ang': self._inp_assly_ang.value
+            'assly_ang': self._inp_assly_ang.value,
+            'assly_ofs': self._inp_assly_ofs.value,
+            'plane_ofs': self._inp_plane_ofs.value
         }
         self._design_ok = not(-1 in [val for _, val in self._design.items()])
         if self._design_ok:
@@ -89,12 +93,8 @@ class Design:
 
     @property
     def crankshaft(self):
-        design = self._design
-        crank_con = Toolkit.get_xz(length=design['crank_len'], theta=math.radians(design['crank_ang']))
-        con_node = Toolkit.get_xz(length=design['lnkge_len'], theta=math.radians(90-design['lnkge_ang']))
-        x = [0, crank_con['x'], crank_con['x'] + con_node['x']]
-        z = [0, crank_con['z'], crank_con['z'] + con_node['z']]
-        return x, z
+        crankshaft = Platform.compute_init_crankshaft(design=self._design)
+        return crankshaft['x'], crankshaft['z']
 
     @property
     def platform(self):
