@@ -113,7 +113,7 @@ class CrankShaft:
             'x': x,
             'y': y,
             'z': z,
-            'angle': self._crank.angle
+            'angle': math.degrees(self._crank.angle)
         }
 
     class _Crank:
