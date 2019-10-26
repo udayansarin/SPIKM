@@ -89,6 +89,8 @@ class CrankShaft:
         if np.iscomplex(c_local_x):
             print("You cannot complete this move!")
             self.incompatible = True
+        else:
+            self.incompatible = False
         c_local_z = k_sq/(2*z) - (c_local_x*x/z)
         self._crank.move({'x': c_local_x, 'z': c_local_z})
         self._connector = self._con_loc_global()
