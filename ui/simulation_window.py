@@ -102,7 +102,7 @@ class Simulation:
 
     def _update_plot(self, platform, linkages):
         if not self.plot_limit:
-            self.plot_limit = max(max(platform[0]), max(platform[1]), abs(np.min(linkages['z'])))
+            self.plot_limit = max(np.max(linkages['x']), np.max(linkages['y']), abs(np.min(linkages['z'])))
 
         sim = GUIPlotter.plot_3d(_x=platform[0], _y=platform[1], _z=platform[2], _window=self._sim,
                                  linkage_x=linkages['x'], linkage_y=linkages['y'], linkage_z=linkages['z'],

@@ -1,4 +1,4 @@
-import math
+import numpy as np
 import sys
 from tkinter import *
 
@@ -66,7 +66,6 @@ class Design:
         self._design = {
             'ptfrm_sze': self._inp_ptfrm_sze.value,
             'ptfrm_len': self._inp_ptfrm_len.value,
-            'lnkge_ang': 5,
             'lnkge_len': self._inp_lnkge_len.value,
             'crank_ang': self._inp_crank_ang.value,
             'crank_len': self._inp_crank_len.value,
@@ -75,33 +74,21 @@ class Design:
             'plane_ofs': self._inp_plane_ofs.value
         }
         self._design_ok = not(-1 in [val for _, val in self._design.items()])
-        if self._design_ok:
-            cs_x, cs_z = self.crankshaft
-            self._driver.output_child.plot_crank(x=cs_x, y=cs_z)
-            pt_x, pt_y = self.platform
-            self._driver.output_child.plot_ptfrm(x=pt_x, y=pt_y)
+        ptfrm = Platform(design=self._design)
+        platform, linkages, motors, feasible = ptfrm.run.get_platform(starting=True)
+        if self._design_ok and not(False in feasible):
+            self._driver.output_child.plot_ptfrm(x=platform[0], y=platform[1], z=platform[2], linkage_x=linkages['x'],
+                                                 linkage_y=linkages['y'], linkage_z=linkages['z'])
             print('Saving design to Program Master at:')
             print(self._master)
             self._master.save_design(self._design)
         else:
-            print('Error: Unable to save incomplete design!')
+            print('Error: Unable to save incomplete/erroneous design!')
         return
 
     @property
     def design(self):
         return self._design
-
-    @property
-    def crankshaft(self):
-        crankshaft = Platform.compute_init_crankshaft(design=self._design)
-        return crankshaft['x'], crankshaft['z']
-
-    @property
-    def platform(self):
-        points = Platform.generate(design=self._design)
-        x = [p[0] for p in points]
-        y = [p[1] for p in points]
-        return x, y
 
     def _start_sim(self):
         if self._design_ok:
@@ -158,39 +145,34 @@ class Display:
         self._parent = frame
         self._me = LabelFrame(self._parent)
         self._me.grid(row=0, column=0)
-        self._crank_window = Frame(self._me)
-        self._crank_window.grid(row=0, column=0)
-        self._platform_window = Frame(self._me)
-        self._platform_window.grid(row=0, column=1)
-        self.plot_crank()
+        self._display_iso = Frame(self._me)
+        self._display_iso.grid(row=0, column=0)
+        self._display_top = Frame(self._me)
+        self._display_top.grid(row=0, column=1)
         self.plot_ptfrm()
 
-    def plot_crank(self, x=None, y=None):
-        if not(x or y):
+    def plot_ptfrm(self, x=None, y=None, z=None, linkage_x=None, linkage_y=None, linkage_z=None):
+        if not(x or y or z):
             x = []
             y = []
-            _lim = None
+            z = []
+            _lim = 1
+            linkage_x = []
+            linkage_y = []
+            linkage_z = []
         else:
-            _lim = max(max(x), max(y))
-        cvs = GUIPlotter.make_plot(x, y, self._crank_window, plot_title='Crank Shaft', x_axis='X →', y_axis='Z →',
-                                   x_size=4, y_size=4, _lim=_lim)
-        cvs.get_tk_widget().grid(row=0, column=0)
-        cvs.draw()
-        return
+            _lim = max(np.max(linkage_x), np.max(linkage_z), abs(np.min(linkage_z)))
+        iso = GUIPlotter.plot_3d(x, y, z, self._display_iso, linkage_x, linkage_y, linkage_z, title='Isometric View',
+                                 _lim=_lim, fig_size=(4, 4))
+        iso.get_tk_widget().grid(row=0, column=0)
+        iso.draw()
 
-    def plot_ptfrm(self, x=None, y=None):
-        if not(x or y):
-            x = []
-            y = []
-            _lim = None
-        else:
-            _lim = max(max(x), max(y))
-        cvs = GUIPlotter.make_plot(x, y, self._platform_window, plot_title='Platform', x_axis='X →', y_axis='Y →',
-                                   x_size=4, y_size=4, _lim=_lim)
-        Display._spacer(self._crank_window, row=0, col=1)
+        Display._spacer(self._display_iso, row=0, col=1)
 
-        cvs.get_tk_widget().grid(row=0, column=1)
-        cvs.draw()
+        top = GUIPlotter.plot_3d(x, y, z, self._display_top, linkage_x, linkage_y, linkage_z, title='Top View',
+                                 _lim=_lim, fig_size=(4, 4))
+        top.get_tk_widget().grid(row=0, column=2)
+        top.draw()
         return
 
     @staticmethod

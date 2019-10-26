@@ -11,47 +11,26 @@ class GUIPlotter:
     """
 
     @staticmethod
-    def make_plot(_x, _y, _window, x_axis=None, y_axis=None, plot_title=None, x_size=None, y_size=None, _lim=None):
-        """
-        Create a matplotlib plot instance in a wkinter frame/window
-        :param _x: x list to plot
-        :param _y: y list to plot
-        :param _window: tkinter widget to develop the plot in
-        :param x_axis: x axis label
-        :param y_axis: y axis label
-        :param plot_title: plot title
-        :param x_size: size of FigureCanvasTkAgg window
-        :param y_size: size of FigureCanvasTkAgg window
-        :param _lim: +/- dimension limit for square plot
-        :return:
-        """
-        fig = Figure(figsize=(x_size, y_size))
-        a = fig.add_subplot(111)
-        a.set_title(plot_title)
-        a.set_xlabel(x_axis)
-        a.set_ylabel(y_axis)
-        if _lim:
-            a.set_xlim([-1.1*_lim, 1.1*_lim])
-            a.set_ylim([-1.1*_lim, 1.1*_lim])
-        a.grid()
-        a.plot(_x, _y, color='red')
-
-        canvas = FigureCanvasTkAgg(fig, master=_window)
-        fig.tight_layout()
-        return canvas
-
-    @staticmethod
-    def plot_3d(_x, _y, _z, _window, linkage_x, linkage_y, linkage_z, _lim=1):
-        fig = Figure()
-        _lim *= 1.5
+    def plot_3d(_x, _y, _z, _window, linkage_x, linkage_y, linkage_z, title="Stewart Platform Simulation", _lim=1,
+                fig_size=None):
+        if fig_size:
+            fig = Figure(figsize=fig_size)
+        else:
+            fig = Figure()
+        _lim *= 1.1
         simulation = Axes3D(fig)
-        simulation.text2D(0.05, 0.95, "Stewart Platform Simulation", transform=simulation.transAxes)
+        simulation.text2D(0.05, 0.95, title, transform=simulation.transAxes)
+        simulation.set_xlabel('X')
+        simulation.set_ylabel('Y')
+        simulation.set_zlabel('Z')
         simulation.set_zlim(-_lim, _lim)
         simulation.set_xlim(-_lim, _lim)
         simulation.set_ylim(-_lim, _lim)
         simulation.plot(_x, _y, _z)
         for i, _ in enumerate(linkage_x):
             simulation.plot(linkage_x[i], linkage_y[i], linkage_z[i])
+        if 'TOP' in title.upper():
+            simulation.view_init(90, -90)
         canvas = FigureCanvasTkAgg(fig, master=_window)
         simulation.figure.canvas = canvas
         simulation.mouse_init()
