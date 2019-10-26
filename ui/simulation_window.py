@@ -1,7 +1,7 @@
+import numpy as np
 from tkinter import *
 from ui.plotting_tools import GUIPlotter
 from dynamics.platform import Platform
-from dynamics.spikm_trig import Toolkit
 
 
 class Controller:
@@ -100,35 +100,40 @@ class Simulation:
         motors.draw()
         return
 
-    def _update_plot(self, platform, linkages, motors, motor_warnings):
+    def _update_plot(self, platform, linkages):
         if not self.plot_limit:
-            self.plot_limit = max(max(platform[0]), max(platform[1]))
+            self.plot_limit = max(max(platform[0]), max(platform[1]), abs(np.min(linkages['z'])))
 
         sim = GUIPlotter.plot_3d(_x=platform[0], _y=platform[1], _z=platform[2], _window=self._sim,
                                  linkage_x=linkages['x'], linkage_y=linkages['y'], linkage_z=linkages['z'],
                                  _lim=self.plot_limit)
         sim.get_tk_widget().grid(row=0, column=0)
+        sim.draw()
 
+    def _update_motors(self, motors, motor_warnings):
         motors = GUIPlotter.plot_motors(_window=self._motor, motor_angles=motors, _incompatible=motor_warnings)
         motors.get_tk_widget().grid(row=0, column=0)
         motors.draw()
-        sim.draw()
 
     def start_simulation(self, design):
         self.ptfrm = Platform(design=design)
         platform, linkages, motors, feasible = self.ptfrm.run.get_platform(starting=True)
         if False in feasible:
             print("Design is Erroneous!")
-            return
-        self._update_plot(platform=platform, linkages=linkages, motors=motors, motor_warnings=feasible)
+        else:
+            self._update_plot(platform=platform, linkages=linkages)
+            self._update_motors(motors=motors, motor_warnings=feasible)
         return
 
     def update_simulation(self, coordinates):
         self.ptfrm.run.update_platform(coordinates)
         platform, linkages, motors, feasible = self.ptfrm.run.get_platform(starting=False)
         if False in feasible:
-            print("Design is Erroneous!")
-        self._update_plot(platform=platform, linkages=linkages, motors=motors, motor_warnings=feasible)
+            print("Design cannot make this move!")
+        else:
+            self._update_plot(platform=platform, linkages=linkages)
+        self._update_motors(motors=motors, motor_warnings=feasible)
+        return
 
     @staticmethod
     def _spacer(parent, row, col):

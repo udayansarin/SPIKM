@@ -14,12 +14,12 @@ class _Platform:
         self.g = 0
         self._design = None
         self.nodes = {
-            '1': {'motor': None, 'node': None, 'rotation': 0},
-            '2': {'motor': None, 'node': None, 'rotation': 0},
-            '3': {'motor': None, 'node': None, 'rotation': -120},
-            '4': {'motor': None, 'node': None, 'rotation': -120},
-            '5': {'motor': None, 'node': None, 'rotation': 120},
-            '6': {'motor': None, 'node': None, 'rotation': 120}
+            '1': {'motor': None, 'node': self._Node, 'rotation': 0},
+            '2': {'motor': None, 'node': self._Node, 'rotation': 0},
+            '3': {'motor': None, 'node': self._Node, 'rotation': -120},
+            '4': {'motor': None, 'node': self._Node, 'rotation': -120},
+            '5': {'motor': None, 'node': self._Node, 'rotation': 120},
+            '6': {'motor': None, 'node': self._Node, 'rotation': 120}
         }
         self._shape = None
         self._current_platform = None
@@ -115,14 +115,10 @@ class _Platform:
             _node = self.nodes[str(node_num+1)]
             _node['node'].update_position(posn=curr_pos)
             _link = _node['node'].get_linkage()
-
-            if not _link['feasible']:
-                _feasible.append(False)
-            else:
-                _feasible.append(True)
-                for key, v in _linkages.items():
-                    v.append(_link[key])
-                _motor.append(_link['angle'])
+            _feasible.append(_link['feasible'])
+            for key, v in _linkages.items():
+                v.append(_link[key])
+            _motor.append(_link['angle'])
         return _linkages, _motor, _feasible
 
     @staticmethod
