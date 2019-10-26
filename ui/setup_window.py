@@ -94,6 +94,7 @@ class Design:
         if self._design_ok:
             print('confirming design validated at')
             print(self._master)
+            self._driver.me.select(self._driver.tabs['simulation'].me)
             self._master.validate()
         else:
             print("Error: Design not complete/saved!")

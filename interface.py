@@ -86,7 +86,7 @@ class _Controller:
 
     class _Window:
         def __init__(self, parent, master):
-            self._tabs = {}
+            self.tabs = {}
             self._parent = parent
             self.me = ttk.Notebook(self._parent)
             self._master = master
@@ -102,19 +102,19 @@ class _Controller:
             _tabs = ['setup', 'simulation']
             for tb in _tabs:
                 _Logger.log(text=f'{tb} tab created')
-                self._tabs[tb] = self._Tab(name=tb, parent=self.me, driver=self, master=self._master)
+                self.tabs[tb] = self._Tab(name=tb, parent=self.me, driver=self, master=self._master)
 
         def add_tab(self, target):
-            if target in self._tabs:
-                self._tabs[target].add_tab()
+            if target in self.tabs:
+                self.tabs[target].add_tab()
 
         def clear_tabs(self):
-            for tb, _tab in self._tabs.items():
+            for tb, _tab in self.tabs.items():
                 self.me.forget(_tab.me)
                 _tab.kill()
                 del _tab
                 _Logger.log(f'{tb} tab destroyed')
-            self._tabs = {}
+            self.tabs = {}
 
         class _Tab:
             def __init__(self, name, parent, driver, master):
