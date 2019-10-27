@@ -49,7 +49,7 @@ class CrankShaft:
     def _con_loc_global(self):
         """
         calculate the coordinate of the crank-linkage connection in global coordinates
-        :return: crank-linkage connection in global coordinates
+        :return: dict, {'x', 'y', 'z'} crank-linkage connection in global coordinates
         """
         _alpha = 0
         _beta = 0
@@ -63,7 +63,7 @@ class CrankShaft:
     def _node_loc_local(self):
         """
         calculate the local coordinate of the linkage-platform connection for computational simplicity
-        :return: coordinates of the linkage-platform connection
+        :return: dict, {'x', 'y'} coordinates of the linkage-platform connection
         """
         _alpha = 0
         _beta = 0
@@ -74,6 +74,13 @@ class CrankShaft:
         return {'x': _loc_vector[0], 'y': _loc_vector[1], 'z': _loc_vector[2]}
 
     def move(self, x_new, y_new, z_new):
+        """
+        move the crankshaft into the commanded node orientation
+        :param x_new: float, new x coordinate of the crankshaft node
+        :param y_new: float, new y coordinate of the crankshaft node
+        :param z_new: float, new z coordinate of the crankshaft node
+        :return:
+        """
         self._node['x'] = x_new
         self._node['y'] = y_new
         self._node['z'] = z_new
@@ -94,11 +101,12 @@ class CrankShaft:
         c_local_z = k_sq/(2*z) - (c_local_x*x/z)
         self._crank.move({'x': c_local_x, 'z': c_local_z})
         self._connector = self._con_loc_global()
+        return
 
     def get_linkage(self):
         """
-        develop plot for the linkage in global 3d space in the form of lists of x, y and z coordinates of each point
-        :return: bool - whether the plot is real/complex, x coordinate list, y list, z list
+        develop critical parameters for the orientation of the link in space and its motor
+        :return: dict, {'feasible': bool, move feasible, 'x', 'y', 'z': list of link coordinates, 'angle': float, motor}
         """
         x = []
         y = []
@@ -117,6 +125,9 @@ class CrankShaft:
         }
 
     class _Crank:
+        """
+        Instances of this class show behaviour of the crank portion of a crankshaft
+        """
         def __init__(self, length, start_angle):
             """
             define a crank connected to a motor with the motor shaft at (0, 0, 0) in local coordinates
@@ -148,12 +159,16 @@ class CrankShaft:
             """
             self.connector = [new_connector['x'], 0, new_connector['z']]
             self.angle = STrig.get_theta(x=new_connector['x'], z=new_connector['z'])
+            return
 
         @property
         def position(self):
             return self.angle
 
     class _Linkage:
+        """
+        Instances of this class show behaviour of the linkage part of a crankshaft
+        """
         def __init__(self, length):
             """
             define the linkage connecting a crank to the corresponding stewart platform connection

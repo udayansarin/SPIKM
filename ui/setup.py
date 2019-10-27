@@ -2,24 +2,21 @@ import numpy as np
 import sys
 from tkinter import *
 
-from dynamics.spikm_trig import Toolkit
 from dynamics.platform import Platform
-from ui.plotting_tools import GUIPlotter
-
-
-class _Orientation:
-    def __init__(self):
-        self.pltfrm_angle = None
-        self.pltfrm_len = None
-        self.linkage_angle = None
-        self.crank_angle = None
-        self.assembly_angle = None
-        self.crank_length = None
-        self.linkage_length = None
+from ui.plotting import GUIPlotter
 
 
 class Design:
+    """
+    Tools and tkinter controls for design of the Stewart Platform
+    """
     def __init__(self, frame, driver, master):
+        """
+        initialize properties and features for the design of the Stewart Platform
+        :param frame: tk.Frame, where the controller is to be placed
+        :param driver: interface._Window, running the design and display setup
+        :param master: interface._Execute, running the program
+        """
         self._parent = frame
         self._driver = driver
         print(f'Program master in class {type(self).__name__}:')
@@ -27,7 +24,6 @@ class Design:
         self._master = master
         self._me = LabelFrame(self._parent)
         self._me.grid(row=1, column=0)
-        self._orientation = _Orientation()
         self._inp_ptfrm_sze = None
         self._inp_ptfrm_len = None
         self._inp_crank_ang = None
@@ -43,6 +39,10 @@ class Design:
         self._show_widgets()
 
     def _show_widgets(self):
+        """
+        show input widgets to define platform design parameters
+        :return:
+        """
         self._inp_ptfrm_sze = self._Input(label_text='Platform Centre Length', parent=self._me, row=1, col=0)
         self._inp_ptfrm_len = self._Input(label_text='Platform Edge Length', parent=self._me, row=1, col=1)
         self._inp_lnkge_len = self._Input(label_text='Linkage Length', parent=self._me, row=1, col=2)
@@ -63,6 +63,10 @@ class Design:
         return
 
     def _update_design(self):
+        """
+        update the platform design on the basis of tk.Entry widget values
+        :return:
+        """
         self._design = {
             'ptfrm_sze': self._inp_ptfrm_sze.value,
             'ptfrm_len': self._inp_ptfrm_len.value,
@@ -91,6 +95,10 @@ class Design:
         return self._design
 
     def _start_sim(self):
+        """
+        start the simulation on the basis of the stored design, if it is validated
+        :return:
+        """
         if self._design_ok:
             print('confirming design validated at')
             print(self._master)
@@ -101,7 +109,19 @@ class Design:
         return
 
     class _Input:
+        """
+        Define amalgamation of tkinter widgets as a single design parameter entry
+        """
         def __init__(self, label_text, parent, row, col, limit_low=0, limit_high=sys.maxsize):
+            """
+            initialize a design parameter input field
+            :param label_text: str, containing the field header
+            :param parent: tk.Frame, where the input is to be populated
+            :param row: int, the row in the tk.Frame grid where the input field is populated
+            :param col: int, the column in the tk.Frame grid where the input field is populated
+            :param limit_low: int, the lower limit which the input field will accept as a valid value
+            :param limit_high: int, the higher limit which the input field will accepts as a valid value
+            """
             self._parent = parent
             self._me = LabelFrame(self._parent)
             self._me.grid(row=row, column=col)
@@ -117,6 +137,10 @@ class Design:
             self._limit_high = limit_high
 
         def _check_value(self):
+            """
+            check if the inputted value is valud
+            :return: float/int, input value or -1 if the value is not valid
+            """
             self._valid = False
             try:
                 _inp = float(self.entry.get())
@@ -128,6 +152,10 @@ class Design:
                 return -1
 
         def _set_value(self):
+            """
+            provide a user prompt for the input value by changing the accept button to green (if valid) red (if invalid)
+            :return:
+            """
             val = self._check_value()
             if self._valid:
                 self.submit.configure(background='green', relief=SUNKEN)
@@ -142,7 +170,14 @@ class Design:
 
 
 class Display:
+    """
+    Tools to show the current design state of the Stewart Platform
+    """
     def __init__(self, frame):
+        """
+        initialize behaviour and tk instances to display the design of the Stewart Platform
+        :param frame: tk.Frame, where the display is to be populated
+        """
         self._parent = frame
         self._me = LabelFrame(self._parent)
         self._me.grid(row=0, column=0)
@@ -153,6 +188,16 @@ class Display:
         self.plot_ptfrm()
 
     def plot_ptfrm(self, x=None, y=None, z=None, linkage_x=None, linkage_y=None, linkage_z=None):
+        """
+        plot the platform into the display windows
+        :param x: list, 7 elements for the x geometry of the Stewart Platform
+        :param y: list, y geometry of the Stewart Platform
+        :param z: list, z geometry of the Stewart Platform
+        :param linkage_x: list, 6x3 containing the x coordinates of the six linkages
+        :param linkage_y: list, y coordinates for the linkages
+        :param linkage_z: list, z coordinates for the linkages
+        :return:
+        """
         if not(x or y or z):
             x = []
             y = []
@@ -178,5 +223,12 @@ class Display:
 
     @staticmethod
     def _spacer(parent, row, col):
+        """
+        add tk.Label to space both simulation output plots
+        :param parent: tk.Frame, containing the spacer
+        :param row: int, row in the tk.Frame grid to populate
+        :param col: int, col in the tk.Frame grid to populate
+        :return:
+        """
         Label(parent, text='\t').grid(row=row, column=col)
         return

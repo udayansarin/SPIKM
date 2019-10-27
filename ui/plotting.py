@@ -7,12 +7,25 @@ matplotlib.use('TkAgg')
 
 class GUIPlotter:
     """
-    Generic class to create a matplotlib tkinter plot using canvas tools
+     Tools to create a matplotlib tkinter plot using canvas tools for features of the Stewart Platform
     """
-
     @staticmethod
     def plot_3d(_x, _y, _z, _window, linkage_x, linkage_y, linkage_z, title="Stewart Platform Simulation", _lim=1,
                 fig_size=None):
+        """
+
+        :param _x: list, x coordinates of the platform
+        :param _y: list, y coordinates of the platform
+        :param _z: list, z coordinates of the platform
+        :param _window: tk.Frame, where the plot is to be displayed
+        :param linkage_x: list, x coordinates of the linkage
+        :param linkage_y: list, y coordinates of the linkage
+        :param linkage_z: list, z coordinates of the linkage
+        :param title: str, title of the plot
+        :param _lim: float, limits to be displayed for each axis of the plot
+        :param fig_size: list, containing x_size and y_size for the plot
+        :return: FigureCanvasTkAgg, canvas containing the plot
+        """
         if fig_size:
             fig = Figure(figsize=fig_size)
         else:
@@ -38,6 +51,13 @@ class GUIPlotter:
 
     @staticmethod
     def plot_motors(_window, motor_angles=[0.0]*6, _incompatible=[True]*6):
+        """
+        generate a control panel display for the platform motor angles
+        :param _window: tk.Frame, where the plot is to be displayed
+        :param motor_angles: list, containing the angles of each motor
+        :param _incompatible: list, containing bools corresponding to whether the motor can achieve the move
+        :return: FigureCanvasTkAgg, canvas containing the plot
+        """
         fig = Figure(figsize=(2, 5))
         base = 610
         for i, angle in enumerate(motor_angles):
