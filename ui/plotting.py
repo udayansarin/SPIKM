@@ -13,7 +13,7 @@ class GUIPlotter:
     def plot_3d(_x, _y, _z, _window, linkage_x, linkage_y, linkage_z, title="Stewart Platform Simulation", _lim=1,
                 fig_size=None):
         """
-
+        create a matplotlib.Axes3d plot for the Stewart Platform
         :param _x: list, x coordinates of the platform
         :param _y: list, y coordinates of the platform
         :param _z: list, z coordinates of the platform
@@ -42,6 +42,8 @@ class GUIPlotter:
         simulation.plot(_x, _y, _z)
         for i, _ in enumerate(linkage_x):
             simulation.plot(linkage_x[i], linkage_y[i], linkage_z[i])
+            mtr_pos = linkage_x[i][0], linkage_y[i][0], linkage_z[i][0]
+            simulation.text(mtr_pos[0], mtr_pos[1], 1.1*mtr_pos[2], f'Motor {i+1}', zdir='z')
         if 'TOP' in title.upper():
             simulation.view_init(90, -90)
         canvas = FigureCanvasTkAgg(fig, master=_window)

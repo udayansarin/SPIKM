@@ -44,7 +44,7 @@ class _Execute:
         """
         self._child = _child
         self._title = 'SPIKM - Inverse Kinematics'
-        self._icon_f = os.path.join(os.getcwd(), 'arm.gif')
+        self._icon_f = os.path.join(os.getcwd(), 'tmp/logo.gif')
         self._size = "905x600"
         self._window = None
         self._validated = False
