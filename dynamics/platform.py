@@ -136,7 +136,7 @@ class _Platform:
                 _feasible.append(True)
                 for key, v in _linkages.items():
                     v.append(_link[key])
-                _motor.append(_link['angle'])
+                _motor.append(_link['angle']*(-1 if _even else 1))
         return _linkages, _motor, _feasible
 
     def _update_nodes(self):
@@ -159,7 +159,7 @@ class _Platform:
             _feasible.append(_link['feasible'])
             for key, v in _linkages.items():
                 v.append(_link[key])
-            _motor.append(_link['angle'])
+            _motor.append(_link['angle']*(-1 if (node_num+1) % 2 == 0 else 1))
         return _linkages, _motor, _feasible
 
     @staticmethod
