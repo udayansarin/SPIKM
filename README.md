@@ -9,6 +9,7 @@ Stewart Platform Inverse Kinematic Model
 
 ### Run the Interface
 `cd SPIKM`
+
 `python interface.py`
 
 ### Design the Platform
